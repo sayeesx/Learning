@@ -1,0 +1,59 @@
+# Customer Purchase Prediction using SVM
+
+## Step 1: Import Libraries
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
+from sklearn.metrics import classification_report, confusion_matrix
+
+## Step 2: Create a Sample Dataset
+data = {
+    'Age': [22, 25, 47, 52, 46, 56, 55, 60, 48, 50, 29, 33],
+    'EstimatedSalary': [15000, 29000, 48000, 60000, 50000, 80000, 90000, 100000, 70000, 65000, 25000, 30000],
+    'Purchased': [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0]
+}
+df = pd.DataFrame(data)
+print(df)
+
+## Step 3: Preprocess Data
+X = df[['Age', 'EstimatedSalary']].values
+y = df['Purchased'].values
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+sc = StandardScaler()
+X_train = sc.fit_transform(X_train)
+X_test = sc.transform(X_test)
+
+## Step 4: Train SVM Model
+model = SVC(kernel='linear')
+model.fit(X_train, y_train)
+
+## Step 5: Make Predictions
+y_pred = model.predict(X_test)
+print("Classification Report:\n", classification_report(y_test, y_pred))
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+
+## Step 6: Visualize Decision Boundary
+from matplotlib.colors import ListedColormap
+
+def plot_decision_boundary(X_set, y_set, model, title):
+    X1, X2 = X_set[:, 0], X_set[:, 1]
+    X1_grid, X2_grid = np.meshgrid(np.arange(start=X1.min()-1, stop=X1.max()+1, step=0.01),
+                                   np.arange(start=X2.min()-1, stop=X2.max()+1, step=0.01))
+    plt.contourf(X1_grid, X2_grid,
+                 model.predict(np.array([X1_grid.ravel(), X2_grid.ravel()]).T).reshape(X1_grid.shape),
+                 alpha=0.3, cmap=ListedColormap(('red', 'green')))
+    plt.scatter(X1, X2, c=y_set, cmap=ListedColormap(('red', 'green')), edgecolor='k')
+    plt.title(title)
+    plt.xlabel('Age (scaled)')
+    plt.ylabel('Salary (scaled)')
+    plt.show()
+
+plot_decision_boundary(X_train, y_train, model, "SVM Decision Boundary (Train Set)")
+
+## Step 7: Predict New Customer
+new_customer = sc.transform([[35, 40000]])
+print("Prediction for new customer (Age 35, Salary 40k):", "Will Buy" if model.predict(new_customer)[0] == 1 else "Won't Buy")
